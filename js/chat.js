@@ -3,7 +3,7 @@
  */
 
 import { state } from './state.js';
-import { chatCompletion } from './api.js';
+import { chatCompletion, fetchFiles, readFile } from './api.js';
 import { getEditorContent } from './editor.js';
 import { showDiff } from './diff.js';
 import { detectFileActions, detectPlan, displayPlan, showFileActionConfirmation, executeFileAction } from './agent.js';
@@ -82,6 +82,86 @@ function parseCodeBlocks(text) {
 }
 
 /**
+ * Détecte si l'utilisateur demande d'analyser tous les fichiers du projet
+ */
+function detectProjectAnalysisRequest(message) {
+  const lowerMsg = message.toLowerCase();
+  const keywords = [
+    'analyse les fichiers',
+    'analyser les fichiers',
+    'tous les fichiers',
+    'liste les fichiers',
+    'lister les fichiers',
+    'voir les fichiers',
+    'fichiers du projet',
+    'projet complet',
+    'analyse tout',
+    'analyser tout',
+    'tous',
+  ];
+
+  return keywords.some(keyword => lowerMsg.includes(keyword));
+}
+
+/**
+ * Charge le contexte complet du projet (liste des fichiers avec aperçu)
+ */
+async function loadProjectContext() {
+  try {
+    const files = await fetchFiles();
+
+    if (!files || files.length === 0) {
+      return 'Le projet ne contient aucun fichier.';
+    }
+
+    let context = `\n\n[STRUCTURE DU PROJET]\n`;
+    context += `Le projet contient ${files.length} fichier(s) :\n\n`;
+
+    // Organiser les fichiers par type
+    const filesByType = {};
+    files.forEach(file => {
+      const ext = file.name.split('.').pop() || 'autre';
+      if (!filesByType[ext]) filesByType[ext] = [];
+      filesByType[ext].push(file);
+    });
+
+    // Afficher la structure organisée
+    for (const [ext, filesOfType] of Object.entries(filesByType)) {
+      context += `📄 Fichiers .${ext} (${filesOfType.length}) :\n`;
+      filesOfType.forEach(file => {
+        const size = file.size ? `${Math.round(file.size / 1024)}KB` : 'N/A';
+        context += `   - ${file.path} (${size})\n`;
+      });
+      context += '\n';
+    }
+
+    // Pour les petits projets (< 10 fichiers), charger un aperçu du contenu
+    if (files.length <= 10) {
+      context += `\n[APERÇU DU CONTENU]\n\n`;
+
+      for (const file of files) {
+        try {
+          const fileData = await readFile(file.path);
+          const lines = fileData.content.split('\n');
+          const preview = lines.slice(0, 20).join('\n'); // Premiers 20 lignes
+          const truncated = lines.length > 20 ? `\n... (${lines.length - 20} lignes supplémentaires)` : '';
+
+          context += `\`\`\`${file.path}\n${preview}${truncated}\n\`\`\`\n\n`;
+        } catch (error) {
+          context += `${file.path} : Erreur de lecture\n\n`;
+        }
+      }
+    } else {
+      context += `\nNote : Le projet contient plus de 10 fichiers. Demandez-moi d'ouvrir un fichier spécifique pour voir son contenu.\n`;
+    }
+
+    return context;
+  } catch (error) {
+    return `\n\n[Erreur lors du chargement du projet : ${error.message}]`;
+  }
+}
+
+/**
  * Construit le prompt système intelligent
  */
 function buildSystemPrompt() {
@@ -114,8 +194,11 @@ function buildSystemPrompt() {
     prompt += `Le système détectera automatiquement ces blocs et proposera une visualisation diff à l'utilisateur. `;
     prompt += `Si l'utilisateur demande de modifier le code, fournis le code complet du fichier dans un bloc.`;
   } else {
-    prompt += `Aucun fichier n'est ouvert. Tu peux aider l'utilisateur avec des questions générales ou l'inviter à ouvrir un fichier.`;
+    prompt += `Aucun fichier n'est ouvert. `;
   }
+
+  prompt += `\n\nPour analyser le projet complet, l'utilisateur peut dire "analyse les fichiers" ou "tous les fichiers". `;
+  prompt += `Le système chargera alors automatiquement la structure du projet et le contenu des fichiers.`;
 
   return prompt;
 }
@@ -143,14 +226,25 @@ async function sendMessage(text) {
 
   // Préparer les messages avec contexte
   const systemPrompt = buildSystemPrompt();
-  const contextMessage = state.currentFile
-    ? `\n\n[Fichier actuel: ${state.currentFilePath}]\n\`\`\`\n${getEditorContent()}\n\`\`\``
-    : '';
+
+  // Détecter si l'utilisateur demande d'analyser tous les fichiers
+  const needsProjectContext = detectProjectAnalysisRequest(text);
+
+  let contextMessage = '';
+
+  if (needsProjectContext) {
+    // Charger le contexte complet du projet
+    contentEl.textContent = 'Analyse du projet en cours...';
+    contextMessage = await loadProjectContext();
+  } else if (state.currentFile) {
+    // Contexte du fichier actuel uniquement
+    contextMessage = `\n\n[Fichier actuel: ${state.currentFilePath}]\n\`\`\`\n${getEditorContent()}\n\`\`\``;
+  }
 
   const messages = [
     { role: 'system', content: systemPrompt },
     ...state.messages.map((msg, idx) => {
-      // Ajouter le contexte du fichier uniquement au premier message user
+      // Ajouter le contexte uniquement au premier message user
       if (idx === 0 && msg.role === 'user' && contextMessage) {
         return { ...msg, content: msg.content + contextMessage };
       }

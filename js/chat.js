@@ -89,6 +89,8 @@ function detectProjectAnalysisRequest(message) {
   const keywords = [
     'analyse les fichiers',
     'analyser les fichiers',
+    'analyse moi les fichier', // Avec faute
+    'analyser le fichier', // Variations
     'tous les fichiers',
     'liste les fichiers',
     'lister les fichiers',
@@ -97,7 +99,11 @@ function detectProjectAnalysisRequest(message) {
     'projet complet',
     'analyse tout',
     'analyser tout',
-    'tous',
+    'voir tout',
+    'montre tout',
+    'montre les fichiers',
+    'quel fichier',
+    'quels fichiers',
   ];
 
   return keywords.some(keyword => lowerMsg.includes(keyword));
@@ -198,7 +204,13 @@ function buildSystemPrompt() {
   }
 
   prompt += `\n\nPour analyser le projet complet, l'utilisateur peut dire "analyse les fichiers" ou "tous les fichiers". `;
-  prompt += `Le système chargera alors automatiquement la structure du projet et le contenu des fichiers.`;
+  prompt += `Le système chargera alors automatiquement la structure du projet et le contenu des fichiers.\n\n`;
+
+  prompt += `⚠️ IMPORTANT : Si l'utilisateur demande d'analyser les fichiers du projet :\n`;
+  prompt += `- Tu DOIS utiliser UNIQUEMENT les informations fournies dans le contexte [STRUCTURE DU PROJET] et [APERÇU DU CONTENU]\n`;
+  prompt += `- N'INVENTE JAMAIS de fichiers qui ne sont pas listés dans le contexte\n`;
+  prompt += `- Si aucun contexte de projet n'est fourni, indique clairement qu'aucun fichier n'est disponible\n`;
+  prompt += `- Base ton analyse EXCLUSIVEMENT sur les données réelles fournies`;
 
   return prompt;
 }
@@ -234,23 +246,34 @@ async function sendMessage(text) {
 
   if (needsProjectContext) {
     // Charger le contexte complet du projet
+    console.log('[Chat] Détection d\'analyse projet - Chargement du contexte...');
     contentEl.textContent = 'Analyse du projet en cours...';
     contextMessage = await loadProjectContext();
+    console.log('[Chat] Contexte chargé:', contextMessage.substring(0, 200) + '...');
   } else if (state.currentFile) {
     // Contexte du fichier actuel uniquement
     contextMessage = `\n\n[Fichier actuel: ${state.currentFilePath}]\n\`\`\`\n${getEditorContent()}\n\`\`\``;
   }
 
+  // Trouver le dernier message utilisateur (celui qu'on vient d'ajouter)
+  const lastUserMessageIndex = state.messages.length - 1;
+
   const messages = [
     { role: 'system', content: systemPrompt },
     ...state.messages.map((msg, idx) => {
-      // Ajouter le contexte uniquement au premier message user
-      if (idx === 0 && msg.role === 'user' && contextMessage) {
+      // Ajouter le contexte au dernier message utilisateur
+      if (idx === lastUserMessageIndex && msg.role === 'user' && contextMessage) {
+        console.log('[Chat] Ajout du contexte au message utilisateur');
         return { ...msg, content: msg.content + contextMessage };
       }
       return msg;
     }),
   ];
+
+  // Debug: Afficher le message complet envoyé à l'IA
+  if (needsProjectContext) {
+    console.log('[Chat] Message final envoyé à l\'IA:', messages[messages.length - 1].content.substring(0, 500) + '...');
+  }
 
   // Controller pour annulation
   const controller = new AbortController();

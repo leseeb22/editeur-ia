@@ -114,14 +114,18 @@ function detectProjectAnalysisRequest(message) {
  */
 async function loadProjectContext() {
   try {
+    console.log('[loadProjectContext] Appel de fetchFiles()...');
     const files = await fetchFiles();
+    console.log('[loadProjectContext] Fichiers reçus:', files);
 
     if (!files || files.length === 0) {
-      return 'Le projet ne contient aucun fichier.';
+      console.warn('[loadProjectContext] Aucun fichier trouvé');
+      return '\n\n[STRUCTURE DU PROJET]\nLe projet ne contient aucun fichier.\n';
     }
 
     let context = `\n\n[STRUCTURE DU PROJET]\n`;
     context += `Le projet contient ${files.length} fichier(s) :\n\n`;
+    console.log(`[loadProjectContext] ${files.length} fichier(s) détecté(s)`);
 
     // Organiser les fichiers par type
     const filesByType = {};
@@ -161,9 +165,13 @@ async function loadProjectContext() {
       context += `\nNote : Le projet contient plus de 10 fichiers. Demandez-moi d'ouvrir un fichier spécifique pour voir son contenu.\n`;
     }
 
+    console.log('[loadProjectContext] Contexte final:', context.substring(0, 300) + '...');
     return context;
   } catch (error) {
-    return `\n\n[Erreur lors du chargement du projet : ${error.message}]`;
+    console.error('[loadProjectContext] Erreur:', error);
+    const errorMsg = `\n\n[Erreur lors du chargement du projet : ${error.message}]\n\nDétails: ${error.stack}`;
+    console.log('[loadProjectContext] Message d\'erreur retourné:', errorMsg);
+    return errorMsg;
   }
 }
 
@@ -248,8 +256,21 @@ async function sendMessage(text) {
     // Charger le contexte complet du projet
     console.log('[Chat] Détection d\'analyse projet - Chargement du contexte...');
     contentEl.textContent = 'Analyse du projet en cours...';
-    contextMessage = await loadProjectContext();
-    console.log('[Chat] Contexte chargé:', contextMessage.substring(0, 200) + '...');
+
+    try {
+      contextMessage = await loadProjectContext();
+      console.log('[Chat] Contexte chargé (longueur:', contextMessage.length, 'caractères)');
+      console.log('[Chat] Aperçu contexte:', contextMessage.substring(0, 300) + '...');
+
+      // Vérifier que le contexte n'est pas vide
+      if (!contextMessage || contextMessage.trim().length === 0) {
+        console.error('[Chat] ATTENTION: Contexte vide !');
+        contextMessage = '\n\n[ERREUR: Le contexte du projet est vide]';
+      }
+    } catch (error) {
+      console.error('[Chat] Erreur lors du chargement du contexte:', error);
+      contextMessage = `\n\n[ERREUR: Impossible de charger le contexte - ${error.message}]`;
+    }
   } else if (state.currentFile) {
     // Contexte du fichier actuel uniquement
     contextMessage = `\n\n[Fichier actuel: ${state.currentFilePath}]\n\`\`\`\n${getEditorContent()}\n\`\`\``;
@@ -263,16 +284,24 @@ async function sendMessage(text) {
     ...state.messages.map((msg, idx) => {
       // Ajouter le contexte au dernier message utilisateur
       if (idx === lastUserMessageIndex && msg.role === 'user' && contextMessage) {
-        console.log('[Chat] Ajout du contexte au message utilisateur');
-        return { ...msg, content: msg.content + contextMessage };
+        console.log('[Chat] Ajout du contexte au message utilisateur (longueur contexte:', contextMessage.length, ')');
+        const messageWithContext = { ...msg, content: msg.content + contextMessage };
+        console.log('[Chat] Message utilisateur avec contexte:', messageWithContext.content.substring(0, 500) + '...');
+        return messageWithContext;
       }
       return msg;
     }),
   ];
 
   // Debug: Afficher le message complet envoyé à l'IA
-  if (needsProjectContext) {
-    console.log('[Chat] Message final envoyé à l\'IA:', messages[messages.length - 1].content.substring(0, 500) + '...');
+  if (needsProjectContext || contextMessage) {
+    const lastMsg = messages[messages.length - 1];
+    console.log('[Chat] === DÉBOGAGE FINAL ===');
+    console.log('[Chat] Nombre de messages:', messages.length);
+    console.log('[Chat] Dernier message role:', lastMsg.role);
+    console.log('[Chat] Dernier message contenu (500 premiers chars):', lastMsg.content.substring(0, 500));
+    console.log('[Chat] Contexte présent:', lastMsg.content.includes('[STRUCTURE DU PROJET]') || lastMsg.content.includes('[ERREUR'));
+    console.log('[Chat] === FIN DÉBOGAGE ===');
   }
 
   // Controller pour annulation

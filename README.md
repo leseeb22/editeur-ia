@@ -379,8 +379,28 @@ Dans `js/chat.js`, fonction `buildSystemPrompt()` (ligne ~83)
 
 ## Licence
 
-MIT License - Libre d'utilisation et modification
+**Licence Libre Attribution** – Sébastien Vidotto (Heteractis / Agence-IA-Toulouse.fr)
+
+Copyright (c) 2025 **Sébastien VIDOTTO (SeeB)**
+
+- 🌐 [agence-ia-toulouse.fr](https://agence-ia-toulouse.fr)
+- 💻 [GitHub](https://github.com/leseeb22/editeur-ia)
+
+### Conditions d'utilisation
+
+✅ **Autorisé** : Utilisation, modification, distribution libre
+
+⚠️ **Obligations** :
+1. **Attribution obligatoire** : Mentionner "Créé par Sébastien VIDOTTO (SeeB) – agence-ia-toulouse.fr"
+2. **Visibilité** : Attribution dans la documentation ET l'interface de l'application
+3. **Usage commercial** : Contacter l'auteur via [agence-ia-toulouse.fr](https://agence-ia-toulouse.fr)
+
+📄 Voir le fichier [LICENSE](LICENSE) pour le texte complet de la licence.
 
 ## Auteur
+
+**Sébastien VIDOTTO (SeeB)**
+- Heteractis / Agence IA Toulouse
+- [agence-ia-toulouse.fr](https://agence-ia-toulouse.fr)
 
 Développé avec ❤️ et l'aide de Claude Code

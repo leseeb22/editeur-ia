@@ -82,7 +82,16 @@
       <!-- Zone 3: Chat IA (bas) -->
       <section class="chat-panel">
         <div class="chat-header">
-          <h6 class="mb-0">Assistant IA</h6>
+          <div class="d-flex align-items-center gap-3">
+            <h6 class="mb-0">Assistant IA</h6>
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="agentModeToggle" title="Activer le mode agent autonome">
+              <label class="form-check-label" for="agentModeToggle">
+                <span id="agentModeLabel">🤖 Mode Agent</span>
+              </label>
+            </div>
+            <div id="agentModeIndicator" class="badge bg-success" style="display: none;">Agent actif</div>
+          </div>
           <button id="clearChat" class="btn btn-sm btn-outline-secondary">Effacer</button>
         </div>
         <div id="chatMessages" class="chat-messages"></div>
@@ -223,6 +232,7 @@
     <script src="./js/fileManager.js" type="module"></script>
     <script src="./js/editor.js" type="module"></script>
     <script src="./js/diff.js" type="module"></script>
+    <script src="./js/agent.js" type="module"></script>
     <script src="./js/chat.js" type="module"></script>
     <script src="./js/app.js" type="module"></script>
   </body>

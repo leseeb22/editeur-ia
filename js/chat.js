@@ -1,11 +1,12 @@
 /**
- * Chat Module - Gestion du chat IA avec détection des modifications de code
+ * Chat Module - Gestion du chat IA avec détection des modifications de code et mode agent
  */
 
 import { state } from './state.js';
 import { chatCompletion } from './api.js';
 import { getEditorContent } from './editor.js';
 import { showDiff } from './diff.js';
+import { detectFileActions, detectPlan, displayPlan, showFileActionConfirmation, executeFileAction } from './agent.js';
 
 const chatMessages = document.getElementById('chatMessages');
 const chatForm = document.getElementById('chatForm');
@@ -84,10 +85,27 @@ function parseCodeBlocks(text) {
  * Construit le prompt système intelligent
  */
 function buildSystemPrompt() {
-  const hasFile = !!state.currentFile;
-  const fileName = state.currentFilePath || 'aucun fichier';
+  const hasFile = !!state.openFiles && state.openFiles.length > 0;
+  const activeFile = state.openFiles[state.activeFileIndex];
+  const fileName = activeFile?.path || 'aucun fichier';
 
   let prompt = `Tu es un assistant de programmation expert. `;
+
+  // MODE AGENT ACTIVÉ
+  if (state.agentMode) {
+    prompt += `🤖 MODE AGENT ACTIVÉ\n\n`;
+    prompt += `Tu peux créer des fichiers automatiquement en utilisant ces formats:\n\n`;
+    prompt += `1. Format bloc de code avec indication:\n`;
+    prompt += `"Voici le fichier contact.php :\n\`\`\`php\n<?php ...\n\`\`\`"\n\n`;
+    prompt += `2. Format JSON structuré:\n`;
+    prompt += `{"action": "create_file", "path": "contact.php", "content": "<?php ...", "template": "php"}\n\n`;
+    prompt += `3. Pour les tâches complexes, fournis un PLAN:\n`;
+    prompt += `PLAN:\n`;
+    prompt += `1. Créer le fichier header.php\n`;
+    prompt += `2. Créer le fichier footer.php\n`;
+    prompt += `3. Créer le fichier index.php\n\n`;
+    prompt += `L'utilisateur validera chaque action avant exécution.\n\n`;
+  }
 
   if (hasFile) {
     prompt += `L'utilisateur édite actuellement le fichier "${fileName}". `;
@@ -193,6 +211,34 @@ async function sendMessage(text) {
     // Sauvegarder la réponse
     state.messages.push({ role: 'assistant', content: fullResponse });
 
+    // MODE AGENT : Détecter les plans et actions
+    if (state.agentMode) {
+      // Détecter un plan
+      const plan = detectPlan(fullResponse);
+      if (plan) {
+        displayPlan(plan);
+        return; // Ne pas afficher les boutons de diff si c'est un plan
+      }
+
+      // Détecter des actions de fichiers
+      const fileActions = detectFileActions(fullResponse);
+      if (fileActions.length > 0) {
+        // Proposer chaque action à l'utilisateur
+        for (const action of fileActions) {
+          const confirmed = await showFileActionConfirmation(action);
+          if (confirmed) {
+            const result = await executeFileAction(action);
+            if (result.success) {
+              addMessage('assistant', `✅ Fichier créé : ${result.path}`);
+            } else {
+              addMessage('assistant', `❌ Erreur : ${result.error}`);
+            }
+          }
+        }
+        return; // Ne pas afficher les boutons de diff
+      }
+    }
+
     // Détecter les blocs de code
     const codeBlocks = parseCodeBlocks(fullResponse);
 
@@ -276,6 +322,30 @@ export function initChat() {
   // Bouton clear
   clearChatBtn.addEventListener('click', clearChat);
 
+  // Toggle mode agent
+  const agentToggle = document.getElementById('agentModeToggle');
+  const agentIndicator = document.getElementById('agentModeIndicator');
+
+  if (agentToggle) {
+    agentToggle.addEventListener('change', (e) => {
+      state.agentMode = e.target.checked;
+
+      // Afficher/masquer l'indicateur
+      if (agentIndicator) {
+        agentIndicator.style.display = state.agentMode ? 'block' : 'none';
+      }
+
+      // Ajouter/retirer la classe sur body
+      if (state.agentMode) {
+        document.body.classList.add('agent-active');
+        addMessage('assistant', '🤖 Mode Agent activé ! Je peux maintenant créer des fichiers automatiquement. Demandez-moi par exemple : "Crée un fichier contact.php avec un formulaire".');
+      } else {
+        document.body.classList.remove('agent-active');
+        addMessage('assistant', 'Mode Agent désactivé. Je retourne au mode standard.');
+      }
+    });
+  }
+
   // Message de bienvenue
-  addMessage('assistant', 'Bonjour ! Je suis votre assistant IA pour l\'édition de code. Ouvrez un fichier et demandez-moi de vous aider à le modifier.');
+  addMessage('assistant', 'Bonjour ! Je suis votre assistant IA pour l\'édition de code. Ouvrez un fichier et demandez-moi de vous aider à le modifier.\n\n💡 Activez le Mode Agent pour que je puisse créer des fichiers automatiquement !');
 }

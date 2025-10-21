@@ -9,6 +9,7 @@ import { initFileExplorer } from './fileExplorer.js';
 import { initFileManager } from './fileManager.js';
 import { initEditorEvents, setEditorTheme } from './editor.js';
 import { initDiff } from './diff.js';
+import { initAgent } from './agent.js';
 import { initChat } from './chat.js';
 
 // Éléments DOM
@@ -209,6 +210,7 @@ function init() {
   initFileManager();
   initEditorEvents();
   initDiff();
+  initAgent();
   initChat();
   initEvents();
 

@@ -1,0 +1,3 @@
+# Interdire l'accès direct aux logs
+Order Deny,Allow
+Deny from all

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="fr" data-theme="system">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>chatia • OpenRouter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="title"><a id="appTitle" href="javascript:void(0)">chatia</a></div>
+      <div class="actions">
+        <button id="historyBtn" class="btn btn-outline-secondary btn-sm">Historique</button>
+        <button id="settingsBtn" class="btn btn-primary btn-sm">Paramètres</button>
+        <button id="clearBtn" class="btn btn-outline-secondary btn-sm">Effacer</button>
+      </div>
+    </header>
+
+    <main class="container-sm py-3">
+      <section id="chat" class="chat"></section>
+      <form id="composer" class="composer">
+        <textarea id="input" rows="1" class="form-control" placeholder="Écrivez votre message... (Shift+Entrée pour une nouvelle ligne)"></textarea>
+        <div class="d-flex gap-2">
+          <button id="sendBtn" class="btn btn-primary" type="submit">Envoyer</button>
+          <button id="stopBtn" class="btn btn-outline-danger" type="button" disabled>Arrêter</button>
+        </div>
+      </form>
+    </main>
+
+    <dialog id="settingsModal" class="modal-box">
+      <form method="dialog" class="modal-inner" id="settingsForm">
+        <h5 class="mb-3">Paramètres OpenRouter</h5>
+        <div class="mb-2">
+          <label class="form-label">Titre de l'application</label>
+          <input id="appTitleInput" class="form-control" type="text" placeholder="Nom affiché dans la barre et l'onglet" />
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Clé API</label>
+          <input id="apiKey" class="form-control" type="password" placeholder="sk-or-..." />
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Modèle</label>
+          <select id="model" class="form-select"></select>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Prompt système</label>
+          <textarea id="systemPrompt" class="form-control" rows="3" placeholder="Rôle par défaut de l'assistant"></textarea>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Message d’accueil</label>
+          <textarea id="welcomeMessage" class="form-control" rows="2" placeholder="Message initial de chaque conversation"></textarea>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Thème</label>
+          <select id="themeSelect" class="form-select">
+            <option value="system">Système</option>
+            <option value="dark">Sombre</option>
+            <option value="light">Clair</option>
+          </select>
+        </div>
+        <div class="form-check mb-2">
+          <input id="streamingToggle" class="form-check-input" type="checkbox" checked />
+          <label class="form-check-label" for="streamingToggle">Activer le streaming (réponse progressive)</label>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Site web (facultatif)</label>
+          <input id="homepageUrl" class="form-control" type="url" placeholder="https://www.exemple.com" />
+        </div>
+        <div class="d-flex align-items-center gap-2 mt-3">
+          <button type="button" id="testApiBtn" class="btn btn-outline-primary">Tester l’API</button>
+          <button type="button" id="loadModels" class="btn btn-outline-secondary">Charger les modèles</button>
+          <div class="spacer flex-fill"></div>
+          <button type="button" id="cancelSettings" class="btn btn-outline-secondary">Annuler</button>
+          <button type="submit" class="btn btn-primary">Sauvegarder</button>
+        </div>
+        <div id="apiTestResult" class="small text-muted mt-2"></div>
+        <p class="mt-2 small text-muted">La clé est stockée uniquement dans ce navigateur (localStorage) et utilisée pour contacter OpenRouter directement depuis votre navigateur.</p>
+      </form>
+    </dialog>
+
+    <dialog id="historyModal" class="modal-box">
+      <div class="modal-inner">
+        <h5>Historique des conversations</h5>
+        <div id="historyList" class="history-list mt-2"></div>
+        <div class="d-flex align-items-center gap-2 mt-3">
+          <button id="newConvBtn" class="btn btn-outline-secondary">Nouvelle conversation</button>
+          <div class="spacer flex-fill"></div>
+          <button id="closeHistory" class="btn btn-primary">Fermer</button>
+        </div>
+      </div>
+    </dialog>
+
+    <script src="./app.js" type="module"></script>
+  </body>
+  </html>

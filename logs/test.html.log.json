@@ -1,0 +1,271 @@
+[
+    {
+        "timestamp": "2025-10-21 21:26:19",
+        "datetime_iso": "2025-10-21T21:26:19+02:00",
+        "path": "test.html",
+        "action": "modify",
+        "size_before": 28,
+        "size_after": 15030,
+        "ip": "::1",
+        "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/141.0.0.0 Safari\/537.36",
+        "diff": {
+            "lines_before": 3,
+            "lines_after": 448,
+            "changes": [
+                {
+                    "type": "modify",
+                    "line": 1,
+                    "old": "<html>\r",
+                    "new": "<!DOCTYPE html>"
+                },
+                {
+                    "type": "modify",
+                    "line": 2,
+                    "old": "hello world\r",
+                    "new": "<html lang=\"fr\">"
+                },
+                {
+                    "type": "modify",
+                    "line": 3,
+                    "old": "<\/html>",
+                    "new": "<head>"
+                },
+                {
+                    "type": "add",
+                    "line": 4,
+                    "content": "    <meta charset=\"UTF-8\">"
+                },
+                {
+                    "type": "add",
+                    "line": 5,
+                    "content": "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
+                },
+                {
+                    "type": "add",
+                    "line": 6,
+                    "content": "    <title>À propos - Éditeur IA<\/title>"
+                },
+                {
+                    "type": "add",
+                    "line": 7,
+                    "content": "    <style>"
+                },
+                {
+                    "type": "add",
+                    "line": 8,
+                    "content": "        :root {"
+                },
+                {
+                    "type": "add",
+                    "line": 9,
+                    "content": "            --primary-color: #4a6cf7;"
+                },
+                {
+                    "type": "add",
+                    "line": 10,
+                    "content": "            --secondary-color: #6c63ff;"
+                },
+                {
+                    "type": "add",
+                    "line": 11,
+                    "content": "            --dark-color: #2d2d2d;"
+                },
+                {
+                    "type": "add",
+                    "line": 12,
+                    "content": "            --light-color: #f8f9fa;"
+                },
+                {
+                    "type": "add",
+                    "line": 13,
+                    "content": "            --gray-color: #6c757d;"
+                },
+                {
+                    "type": "add",
+                    "line": 14,
+                    "content": "        }"
+                },
+                {
+                    "type": "add",
+                    "line": 15,
+                    "content": "        "
+                },
+                {
+                    "type": "add",
+                    "line": 16,
+                    "content": "        * {"
+                },
+                {
+                    "type": "add",
+                    "line": 17,
+                    "content": "            margin: 0;"
+                },
+                {
+                    "type": "add",
+                    "line": 18,
+                    "content": "            padding: 0;"
+                },
+                {
+                    "type": "add",
+                    "line": 19,
+                    "content": "            box-sizing: border-box;"
+                },
+                {
+                    "type": "add",
+                    "line": 20,
+                    "content": "            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"
+                },
+                {
+                    "type": "add",
+                    "line": 21,
+                    "content": "        }"
+                },
+                {
+                    "type": "add",
+                    "line": 22,
+                    "content": "        "
+                },
+                {
+                    "type": "add",
+                    "line": 23,
+                    "content": "        body {"
+                },
+                {
+                    "type": "add",
+                    "line": 24,
+                    "content": "            line-height: 1.6;"
+                },
+                {
+                    "type": "add",
+                    "line": 25,
+                    "content": "            color: var(--dark-color);"
+                },
+                {
+                    "type": "add",
+                    "line": 26,
+                    "content": "            background-color: #f5f7ff;"
+                },
+                {
+                    "type": "add",
+                    "line": 27,
+                    "content": "        }"
+                },
+                {
+                    "type": "add",
+                    "line": 28,
+                    "content": "        "
+                },
+                {
+                    "type": "add",
+                    "line": 29,
+                    "content": "        .container {"
+                },
+                {
+                    "type": "add",
+                    "line": 30,
+                    "content": "            width: 90%;"
+                },
+                {
+                    "type": "add",
+                    "line": 31,
+                    "content": "            max-width: 1200px;"
+                },
+                {
+                    "type": "add",
+                    "line": 32,
+                    "content": "            margin: 0 auto;"
+                },
+                {
+                    "type": "add",
+                    "line": 33,
+                    "content": "            padding: 0 20px;"
+                },
+                {
+                    "type": "add",
+                    "line": 34,
+                    "content": "        }"
+                },
+                {
+                    "type": "add",
+                    "line": 35,
+                    "content": "        "
+                },
+                {
+                    "type": "add",
+                    "line": 36,
+                    "content": "        header {"
+                },
+                {
+                    "type": "add",
+                    "line": 37,
+                    "content": "            background-color: white;"
+                },
+                {
+                    "type": "add",
+                    "line": 38,
+                    "content": "            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);"
+                },
+                {
+                    "type": "add",
+                    "line": 39,
+                    "content": "            position: sticky;"
+                },
+                {
+                    "type": "add",
+                    "line": 40,
+                    "content": "            top: 0;"
+                },
+                {
+                    "type": "add",
+                    "line": 41,
+                    "content": "            z-index: 100;"
+                },
+                {
+                    "type": "add",
+                    "line": 42,
+                    "content": "        }"
+                },
+                {
+                    "type": "add",
+                    "line": 43,
+                    "content": "        "
+                },
+                {
+                    "type": "add",
+                    "line": 44,
+                    "content": "        nav {"
+                },
+                {
+                    "type": "add",
+                    "line": 45,
+                    "content": "            display: flex;"
+                },
+                {
+                    "type": "add",
+                    "line": 46,
+                    "content": "            justify-content: space-between;"
+                },
+                {
+                    "type": "add",
+                    "line": 47,
+                    "content": "            align-items: center;"
+                },
+                {
+                    "type": "add",
+                    "line": 48,
+                    "content": "            padding: 20px 0;"
+                },
+                {
+                    "type": "add",
+                    "line": 49,
+                    "content": "        }"
+                },
+                {
+                    "type": "add",
+                    "line": 50,
+                    "content": "        "
+                }
+            ]
+        }
+    }
+]

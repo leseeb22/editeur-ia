@@ -135,3 +135,55 @@ export async function fetchModels(apiKey) {
   const data = await response.json();
   return (data.data || []).filter(m => !m.archived);
 }
+
+/**
+ * Crée un nouveau fichier
+ * @param {string} path - Chemin relatif du fichier
+ * @param {string} template - Template à utiliser (html|php|css|js|blank)
+ */
+export async function createFile(path, template = 'blank') {
+  const response = await fetch(`${API_BASE}/create.php`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      path,
+      template,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!data.success) {
+    throw new Error(data.error || 'Erreur lors de la création du fichier');
+  }
+
+  return data;
+}
+
+/**
+ * Upload un fichier
+ * @param {File} file - Fichier à uploader
+ * @param {string} folder - Dossier de destination (optionnel)
+ */
+export async function uploadFile(file, folder = '') {
+  const formData = new FormData();
+  formData.append('file', file);
+  if (folder) {
+    formData.append('folder', folder);
+  }
+
+  const response = await fetch(`${API_BASE}/upload.php`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  const data = await response.json();
+
+  if (!data.success) {
+    throw new Error(data.error || 'Erreur lors de l\'upload du fichier');
+  }
+
+  return data;
+}

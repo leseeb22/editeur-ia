@@ -1,0 +1,30 @@
+[
+    {
+        "timestamp": "2025-10-21 21:22:01",
+        "datetime_iso": "2025-10-21T21:22:01+02:00",
+        "path": "example.php",
+        "action": "modify",
+        "size_before": 853,
+        "size_after": 860,
+        "ip": "::1",
+        "user_agent": "Mozilla\/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/141.0.0.0 Safari\/537.36",
+        "diff": {
+            "lines_before": 41,
+            "lines_after": 41,
+            "changes": [
+                {
+                    "type": "modify",
+                    "line": 1,
+                    "old": "<?php",
+                    "new": "<?phpdgg"
+                },
+                {
+                    "type": "modify",
+                    "line": 4,
+                    "old": " *\/",
+                    "new": " *\/gfdg"
+                }
+            ]
+        }
+    }
+]

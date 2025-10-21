@@ -4,7 +4,7 @@
 
 import { state } from './state.js';
 import { fetchFiles } from './api.js';
-import { openFile } from './editor.js';
+import { openOrActivateFile } from './fileManager.js';
 
 const fileTreeEl = document.getElementById('fileTree');
 const refreshBtn = document.getElementById('refreshFiles');
@@ -85,7 +85,7 @@ function renderFileItem(file, depth = 0) {
 
       // Ouvrir le fichier dans l'éditeur
       try {
-        await openFile(file.path);
+        await openOrActivateFile(file.path);
       } catch (error) {
         alert(`Erreur lors de l'ouverture du fichier: ${error.message}`);
       }

@@ -29,9 +29,11 @@
       <aside class="file-explorer">
         <div class="explorer-header">
           <h6 class="mb-0">Explorateur</h6>
-          <button id="refreshFiles" class="btn btn-sm btn-outline-secondary">
-            <span class="refresh-icon">⟳</span>
-          </button>
+          <div class="explorer-actions">
+            <button id="newFileBtn" class="btn btn-sm btn-success" title="Nouveau fichier">➕</button>
+            <button id="uploadFileBtn" class="btn btn-sm btn-primary" title="Importer fichier">📤</button>
+            <button id="refreshFiles" class="btn btn-sm btn-outline-secondary" title="Rafraîchir">⟳</button>
+          </div>
         </div>
         <div id="fileTree" class="file-tree">
           <div class="text-muted text-center py-3">Chargement...</div>
@@ -40,6 +42,13 @@
 
       <!-- Zone 2: Éditeur de code (haut droite) -->
       <section class="code-editor">
+        <!-- Barre d'onglets -->
+        <div id="tabBar" class="tab-bar">
+          <div class="tabs-container" id="tabsContainer">
+            <!-- Les onglets seront ajoutés dynamiquement ici -->
+          </div>
+        </div>
+
         <div class="editor-header">
           <div class="file-info">
             <span id="currentFileName" class="file-name">Aucun fichier ouvert</span>
@@ -47,7 +56,9 @@
           </div>
           <div class="editor-actions">
             <button id="saveBtn" class="btn btn-sm btn-success" disabled>Sauvegarder</button>
+            <button id="saveAllBtn" class="btn btn-sm btn-success" disabled>Tout sauvegarder</button>
             <button id="closeFileBtn" class="btn btn-sm btn-outline-secondary" disabled>Fermer</button>
+            <button id="closeAllBtn" class="btn btn-sm btn-outline-secondary" disabled>Tout fermer</button>
           </div>
         </div>
         <div id="editorContainer" class="editor-container">
@@ -140,6 +151,63 @@
       </div>
     </dialog>
 
+    <!-- Modal Nouveau fichier -->
+    <dialog id="newFileModal" class="modal-box">
+      <form method="dialog" class="modal-inner" id="newFileForm">
+        <h5 class="mb-3">Créer un nouveau fichier</h5>
+        <div class="mb-3">
+          <label class="form-label">Nom du fichier</label>
+          <input id="newFileName" class="form-control" type="text" placeholder="exemple.php" required />
+          <small class="text-muted">Avec extension: .php, .html, .css, .js</small>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Dossier (optionnel)</label>
+          <input id="newFileFolder" class="form-control" type="text" placeholder="subfolder/" />
+          <small class="text-muted">Laissez vide pour créer à la racine de page/</small>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Template</label>
+          <select id="newFileTemplate" class="form-select">
+            <option value="html">HTML (avec structure complète)</option>
+            <option value="php">PHP (avec en-tête)</option>
+            <option value="css">CSS (avec commentaires)</option>
+            <option value="js">JavaScript (avec commentaires)</option>
+            <option value="blank">Vide</option>
+          </select>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="button" id="cancelNewFile" class="btn btn-outline-secondary">Annuler</button>
+          <button type="submit" class="btn btn-success">Créer</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Modal Upload fichier -->
+    <dialog id="uploadModal" class="modal-box">
+      <div class="modal-inner">
+        <h5 class="mb-3">Importer un fichier</h5>
+        <form id="uploadForm">
+          <div class="mb-3">
+            <label class="form-label">Fichier à importer</label>
+            <input id="uploadFileInput" class="form-control" type="file" accept=".php,.html,.htm,.css,.js,.json,.txt,.md,.xml,.svg,.jpg,.jpeg,.png,.gif,.webp" required />
+            <small class="text-muted">Max 10 Mo • Extensions: php, html, css, js, json, txt, md, xml, svg, images</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Dossier de destination (optionnel)</label>
+            <input id="uploadFolder" class="form-control" type="text" placeholder="subfolder/" />
+            <small class="text-muted">Laissez vide pour importer à la racine de page/</small>
+          </div>
+          <div id="uploadProgress" class="progress mb-3" style="display: none;">
+            <div id="uploadProgressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" id="cancelUpload" class="btn btn-outline-secondary">Annuler</button>
+            <button type="submit" class="btn btn-primary">Importer</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
     <!-- Scripts CodeMirror -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
@@ -152,6 +220,7 @@
     <script src="./js/state.js" type="module"></script>
     <script src="./js/api.js" type="module"></script>
     <script src="./js/fileExplorer.js" type="module"></script>
+    <script src="./js/fileManager.js" type="module"></script>
     <script src="./js/editor.js" type="module"></script>
     <script src="./js/diff.js" type="module"></script>
     <script src="./js/chat.js" type="module"></script>

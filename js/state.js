@@ -11,11 +11,12 @@ export const state = {
     editorTheme: localStorage.getItem('editorTheme') || 'dracula',
   },
 
-  // Fichiers
+  // Arborescence des fichiers
   files: [],
-  currentFile: null,
-  currentFilePath: null,
-  fileModified: false,
+
+  // Gestion des fichiers ouverts (onglets)
+  openFiles: [], // [{path, content, modified, originalContent}]
+  activeFileIndex: -1, // Index du fichier actif dans openFiles
 
   // Chat
   messages: [],
@@ -28,6 +29,10 @@ export const state = {
 
   // Editor instance (sera défini par editor.js)
   editorInstance: null,
+
+  // Mode agent
+  agentMode: false,
+  agentPlan: null,
 };
 
 /**
@@ -52,4 +57,21 @@ export function applyTheme() {
  */
 export function initState() {
   applyTheme();
+}
+
+/**
+ * Retourne le fichier actif
+ */
+export function getActiveFile() {
+  if (state.activeFileIndex >= 0 && state.activeFileIndex < state.openFiles.length) {
+    return state.openFiles[state.activeFileIndex];
+  }
+  return null;
+}
+
+/**
+ * Trouve l'index d'un fichier ouvert par son chemin
+ */
+export function findFileIndex(path) {
+  return state.openFiles.findIndex(f => f.path === path);
 }

@@ -140,6 +140,11 @@ body {
   letter-spacing: 0.5px;
 }
 
+.explorer-actions {
+  display: flex;
+  gap: 4px;
+}
+
 .refresh-icon {
   display: inline-block;
   font-size: 1.2rem;
@@ -191,6 +196,79 @@ body {
   flex-direction: column;
   overflow: hidden;
   position: relative;
+}
+
+/* Barre d'onglets */
+.tab-bar {
+  display: flex;
+  background: var(--code-bg);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.tabs-container {
+  display: flex;
+  flex: 1;
+  min-height: 36px;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-right: 1px solid var(--border);
+  background: var(--code-bg);
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  transition: background 0.15s;
+  position: relative;
+}
+
+.tab:hover {
+  background: var(--panel);
+}
+
+.tab.active {
+  background: var(--panel);
+  border-bottom: 2px solid var(--accent);
+}
+
+.tab .tab-icon {
+  font-size: 0.9rem;
+}
+
+.tab .tab-name {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tab .tab-modified {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: none;
+}
+
+.tab.modified .tab-modified {
+  display: block;
+}
+
+.tab .tab-close {
+  padding: 0 4px;
+  font-size: 1.1rem;
+  line-height: 1;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.tab .tab-close:hover {
+  opacity: 1;
+  color: var(--danger);
 }
 
 .editor-header {

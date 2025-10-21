@@ -6,6 +6,7 @@
 import { state, initState, saveConfig, applyTheme } from './state.js';
 import { fetchModels, fetchLogs } from './api.js';
 import { initFileExplorer } from './fileExplorer.js';
+import { initFileManager } from './fileManager.js';
 import { initEditorEvents, setEditorTheme } from './editor.js';
 import { initDiff } from './diff.js';
 import { initChat } from './chat.js';
@@ -205,6 +206,7 @@ function init() {
 
   // Initialiser tous les modules
   initFileExplorer();
+  initFileManager();
   initEditorEvents();
   initDiff();
   initChat();

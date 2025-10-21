@@ -1,7 +1,7 @@
-<?php
+<?phpdgg
 /**
  * Fichier d'exemple pour tester l'éditeur IA
- */
+ */gfdg
 
 $title = "Bienvenue";
 $message = "Ceci est un fichier d'exemple";

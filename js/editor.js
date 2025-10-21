@@ -1,17 +1,21 @@
 /**
- * Editor Module - Gestion de CodeMirror
+ * Editor Module - Gestion de CodeMirror avec support multi-onglets
  */
 
-import { state } from './state.js';
-import { readFile, writeFile } from './api.js';
+import { state, getActiveFile } from './state.js';
+import { writeFile } from './api.js';
+import { markActiveFileModified, markActiveFileSaved, updateActiveFileContent, closeAllFiles } from './fileManager.js';
 
 const editorContainer = document.getElementById('editorContainer');
 const fileNameEl = document.getElementById('currentFileName');
 const fileStatusEl = document.getElementById('fileStatus');
 const saveBtn = document.getElementById('saveBtn');
+const saveAllBtn = document.getElementById('saveAllBtn');
 const closeFileBtn = document.getElementById('closeFileBtn');
+const closeAllBtn = document.getElementById('closeAllBtn');
 
 let editor = null;
+let changeListenerActive = true; // Pour éviter de déclencher onChange lors du chargement
 
 /**
  * Détermine le mode CodeMirror selon l'extension
@@ -51,9 +55,13 @@ export function initEditor() {
 
   // Détecter les modifications
   editor.on('change', () => {
-    if (state.currentFile && !state.fileModified) {
-      state.fileModified = true;
-      updateFileStatus();
+    if (!changeListenerActive) return;
+
+    const file = getActiveFile();
+    if (file) {
+      const content = editor.getValue();
+      updateActiveFileContent(content);
+      updateUI();
     }
   });
 
@@ -61,10 +69,25 @@ export function initEditor() {
 }
 
 /**
- * Met à jour le statut du fichier dans l'en-tête
+ * Met à jour l'interface (nom fichier, statut, boutons)
  */
-function updateFileStatus() {
-  if (state.fileModified) {
+function updateUI() {
+  const file = getActiveFile();
+
+  if (!file) {
+    fileNameEl.textContent = 'Aucun fichier ouvert';
+    fileStatusEl.textContent = '';
+    fileStatusEl.className = 'file-status';
+    saveBtn.disabled = true;
+    closeFileBtn.disabled = true;
+    saveAllBtn.disabled = true;
+    closeAllBtn.disabled = true;
+    return;
+  }
+
+  fileNameEl.textContent = file.path;
+
+  if (file.modified) {
     fileStatusEl.textContent = 'Modifié';
     fileStatusEl.className = 'file-status modified';
     saveBtn.disabled = false;
@@ -73,64 +96,65 @@ function updateFileStatus() {
     fileStatusEl.className = 'file-status';
     saveBtn.disabled = true;
   }
+
+  closeFileBtn.disabled = false;
+
+  // Activer "Tout sauvegarder" si au moins un fichier est modifié
+  const hasModified = state.openFiles.some(f => f.modified);
+  saveAllBtn.disabled = !hasModified;
+
+  // Activer "Tout fermer" s'il y a des fichiers ouverts
+  closeAllBtn.disabled = state.openFiles.length === 0;
 }
 
 /**
- * Ouvre un fichier dans l'éditeur
+ * Charge un fichier dans l'éditeur
  */
-export async function openFile(path) {
-  try {
-    const fileData = await readFile(path);
-
-    state.currentFile = fileData;
-    state.currentFilePath = path;
-    state.fileModified = false;
-
-    // Initialiser l'éditeur si nécessaire
-    if (!editor) {
-      initEditor();
-    }
-
-    // Charger le contenu
-    editor.setValue(fileData.content);
-
-    // Définir le mode
-    const mode = getModeByExtension(path);
-    editor.setOption('mode', mode);
-
-    // Mettre à jour l'interface
-    fileNameEl.textContent = path;
-    updateFileStatus();
-    closeFileBtn.disabled = false;
-
-  } catch (error) {
-    throw error;
+function loadFileInEditor(file) {
+  if (!editor) {
+    initEditor();
   }
+
+  // Désactiver temporairement le listener pour éviter de marquer comme modifié
+  changeListenerActive = false;
+
+  // Charger le contenu
+  editor.setValue(file.content);
+
+  // Définir le mode
+  const mode = getModeByExtension(file.path);
+  editor.setOption('mode', mode);
+
+  // Réactiver le listener
+  setTimeout(() => {
+    changeListenerActive = true;
+  }, 100);
+
+  updateUI();
 }
 
 /**
- * Sauvegarde le fichier actuel
+ * Sauvegarde le fichier actif
  */
 export async function saveCurrentFile() {
-  if (!state.currentFile || !editor) {
-    return;
-  }
+  const file = getActiveFile();
+  if (!file || !editor) return;
 
   try {
     saveBtn.disabled = true;
     saveBtn.textContent = 'Sauvegarde...';
 
     const content = editor.getValue();
-    await writeFile(state.currentFilePath, content, 'modify');
+    await writeFile(file.path, content, 'modify');
 
-    state.currentFile.content = content;
-    state.fileModified = false;
+    file.content = content;
+    markActiveFileSaved();
 
-    updateFileStatus();
+    updateUI();
     saveBtn.textContent = 'Sauvegarder';
 
     // Notification
-    showNotification('Fichier sauvegardé avec succès', 'success');
+    showNotification('Fichier sauvegardé', 'success');
 
   } catch (error) {
     saveBtn.disabled = false;
@@ -140,32 +164,32 @@ export async function saveCurrentFile() {
 }
 
 /**
- * Ferme le fichier actuel
+ * Sauvegarde tous les fichiers modifiés
  */
-export function closeCurrentFile() {
-  if (state.fileModified) {
-    if (!confirm('Le fichier a été modifié. Fermer sans sauvegarder ?')) {
-      return;
+async function saveAllFiles() {
+  const modifiedFiles = state.openFiles.filter(f => f.modified);
+
+  if (modifiedFiles.length === 0) return;
+
+  try {
+    saveAllBtn.disabled = true;
+    saveAllBtn.textContent = `Sauvegarde ${modifiedFiles.length} fichier(s)...`;
+
+    for (const file of modifiedFiles) {
+      await writeFile(file.path, file.content, 'modify');
+      file.originalContent = file.content;
+      file.modified = false;
     }
+
+    updateUI();
+    saveAllBtn.textContent = 'Tout sauvegarder';
+
+    showNotification(`${modifiedFiles.length} fichier(s) sauvegardé(s)`, 'success');
+
+  } catch (error) {
+    saveAllBtn.textContent = 'Tout sauvegarder';
+    alert(`Erreur lors de la sauvegarde: ${error.message}`);
   }
-
-  state.currentFile = null;
-  state.currentFilePath = null;
-  state.fileModified = false;
-
-  if (editor) {
-    editor.setValue('');
-  }
-
-  fileNameEl.textContent = 'Aucun fichier ouvert';
-  fileStatusEl.textContent = '';
-  saveBtn.disabled = true;
-  closeFileBtn.disabled = true;
-
-  // Retirer la sélection active
-  document.querySelectorAll('.file-item.active').forEach(el => {
-    el.classList.remove('active');
-  });
 }
 
 /**
@@ -190,9 +214,20 @@ export function getEditorContent() {
  */
 export function setEditorContent(content) {
   if (editor) {
+    changeListenerActive = false;
     editor.setValue(content);
-    state.fileModified = true;
-    updateFileStatus();
+
+    const file = getActiveFile();
+    if (file) {
+      file.content = content;
+      file.modified = (content !== file.originalContent);
+    }
+
+    setTimeout(() => {
+      changeListenerActive = true;
+    }, 100);
+
+    updateUI();
   }
 }
 
@@ -200,14 +235,51 @@ export function setEditorContent(content) {
  * Notification temporaire
  */
 function showNotification(message, type = 'info') {
-  // Simple notification dans le statut
-  const original = fileStatusEl.textContent;
-  fileStatusEl.textContent = message;
-  fileStatusEl.className = `file-status ${type}`;
+  const toast = document.createElement('div');
+  toast.className = `alert alert-${type === 'success' ? 'success' : 'info'} position-fixed`;
+  toast.style.cssText = 'top: 70px; right: 20px; z-index: 9999; min-width: 250px;';
+  toast.textContent = message;
+  document.body.appendChild(toast);
 
   setTimeout(() => {
-    updateFileStatus();
+    toast.remove();
   }, 3000);
+}
+
+/**
+ * Gestion des événements de fileManager
+ */
+function handleFileOpened(e) {
+  const { file } = e.detail;
+  loadFileInEditor(file);
+}
+
+function handleFileSwitched(e) {
+  const file = getActiveFile();
+  if (file) {
+    loadFileInEditor(file);
+  }
+}
+
+function handleFileClosed(e) {
+  const file = getActiveFile();
+
+  if (file) {
+    loadFileInEditor(file);
+  } else {
+    // Aucun fichier ouvert
+    if (editor) {
+      editor.setValue('');
+    }
+    updateUI();
+  }
+}
+
+function handleAllFilesClosed() {
+  if (editor) {
+    editor.setValue('');
+  }
+  updateUI();
 }
 
 /**
@@ -215,15 +287,36 @@ function showNotification(message, type = 'info') {
  */
 export function initEditorEvents() {
   saveBtn.addEventListener('click', saveCurrentFile);
-  closeFileBtn.addEventListener('click', closeCurrentFile);
+  saveAllBtn.addEventListener('click', saveAllFiles);
+  closeFileBtn.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('close-active-tab'));
+  });
+  closeAllBtn.addEventListener('click', closeAllFiles);
 
   // Raccourci Ctrl+S pour sauvegarder
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
       e.preventDefault();
-      if (state.currentFile && state.fileModified) {
+      const file = getActiveFile();
+      if (file && file.modified) {
         saveCurrentFile();
       }
+    }
+  });
+
+  // Écouter les événements de fileManager
+  window.addEventListener('file-opened', handleFileOpened);
+  window.addEventListener('file-switched', handleFileSwitched);
+  window.addEventListener('file-closed', handleFileClosed);
+  window.addEventListener('all-files-closed', handleAllFilesClosed);
+
+  // Écouter la fermeture de l'onglet actif
+  window.addEventListener('close-active-tab', () => {
+    if (state.activeFileIndex !== -1) {
+      const closeTabEvent = new CustomEvent('close-tab-request', {
+        detail: { index: state.activeFileIndex }
+      });
+      window.dispatchEvent(closeTabEvent);
     }
   });
 }

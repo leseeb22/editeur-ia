@@ -2,7 +2,7 @@
  * Chat Module - Gestion du chat IA avec détection des modifications de code et mode agent
  */
 
-import { state } from './state.js';
+import { state, getActiveFile } from './state.js';
 import { chatCompletion, fetchFiles, readFile } from './api.js';
 import { getEditorContent } from './editor.js';
 import { showDiff } from './diff.js';
@@ -271,9 +271,10 @@ async function sendMessage(text) {
       console.error('[Chat] Erreur lors du chargement du contexte:', error);
       contextMessage = `\n\n[ERREUR: Impossible de charger le contexte - ${error.message}]`;
     }
-  } else if (state.currentFile) {
+  } else if (getActiveFile()) {
     // Contexte du fichier actuel uniquement
-    contextMessage = `\n\n[Fichier actuel: ${state.currentFilePath}]\n\`\`\`\n${getEditorContent()}\n\`\`\``;
+    const activeFile = getActiveFile();
+    contextMessage = `\n\n[Fichier actuel: ${activeFile.path}]\n\`\`\`\n${getEditorContent()}\n\`\`\``;
   }
 
   // Trouver le dernier message utilisateur (celui qu'on vient d'ajouter)
@@ -388,10 +389,16 @@ async function sendMessage(text) {
     // Détecter les blocs de code
     const codeBlocks = parseCodeBlocks(fullResponse);
 
-    if (codeBlocks.length > 0 && state.currentFile) {
+    const activeFile = getActiveFile();
+    if (codeBlocks.length > 0 && activeFile) {
+      console.log('[Chat] Blocs de code détectés:', codeBlocks.length);
+      console.log('[Chat] Fichier actif:', activeFile.path);
+
       // Proposer le diff pour le premier bloc de code trouvé
       const firstBlock = codeBlocks[0];
       const originalContent = getEditorContent();
+
+      console.log('[Chat] Création du bouton de diff');
 
       // Ajouter un bouton pour voir le diff
       const diffBtn = document.createElement('button');
@@ -402,6 +409,9 @@ async function sendMessage(text) {
       };
 
       assistantDiv.appendChild(diffBtn);
+      console.log('[Chat] Bouton de diff ajouté');
+    } else {
+      console.log('[Chat] Pas de bouton diff - Blocs:', codeBlocks.length, 'Fichier actif:', !!activeFile);
     }
 
   } catch (error) {
